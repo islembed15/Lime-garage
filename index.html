@@ -484,8 +484,8 @@ const translations = {
     confirmRemoveFuelLog:"Remove this fuel entry? This can't be undone.",
     confirmRemoveDelivery:"Remove this delivery entry? This can't be undone.",
     resetAll:"Reset All (Paid)",
-    confirmResetDriver:"Reset this driver's delivered count to 0? Use this after paying them.",
-    confirmResetAll:"Reset ALL drivers' delivered counts to 0? Use this after paying everyone for the month. This can't be undone.",
+    confirmResetDriver:"Reset this driver's delivered count to 0 and clear their delivery log entries? Use this after paying them. This can't be undone.",
+    confirmResetAll:"Reset ALL drivers' delivered counts to 0 and clear the entire delivery log? Use this after paying everyone for the month. This can't be undone.",
     statWeekTotal:"This Week — Total Liters", statAvgPerVehicle:"This Week — Avg per Vehicle", statWeekCost:"This Week — Total Cost"
   },
   de: {
@@ -518,8 +518,8 @@ const translations = {
     confirmRemoveFuelLog:"Diesen Tankeintrag entfernen? Kann nicht rückgängig gemacht werden.",
     confirmRemoveDelivery:"Diesen Liefereintrag entfernen? Kann nicht rückgängig gemacht werden.",
     resetAll:"Alle zurücksetzen (bezahlt)",
-    confirmResetDriver:"Gelieferte Menge dieses Fahrers auf 0 zurücksetzen? Nach der Bezahlung verwenden.",
-    confirmResetAll:"Gelieferte Menge ALLER Fahrer auf 0 zurücksetzen? Nach Bezahlung aller am Monatsende verwenden. Kann nicht rückgängig gemacht werden.",
+    confirmResetDriver:"Gelieferte Menge dieses Fahrers auf 0 zurücksetzen und dessen Lieferprotokoll löschen? Nach der Bezahlung verwenden. Kann nicht rückgängig gemacht werden.",
+    confirmResetAll:"Gelieferte Menge ALLER Fahrer auf 0 zurücksetzen und das gesamte Lieferprotokoll löschen? Nach Bezahlung aller am Monatsende verwenden. Kann nicht rückgängig gemacht werden.",
     statWeekTotal:"Diese Woche — Liter gesamt", statAvgPerVehicle:"Diese Woche — Ø pro Fahrzeug", statWeekCost:"Diese Woche — Kosten gesamt"
   },
   ar: {
@@ -552,8 +552,8 @@ const translations = {
     confirmRemoveFuelLog:"هل تريد حذف سجل الوقود هذا؟ لا يمكن التراجع عن هذا.",
     confirmRemoveDelivery:"هل تريد حذف سجل التوصيل هذا؟ لا يمكن التراجع عن هذا.",
     resetAll:"إعادة تعيين الكل (تم الدفع)",
-    confirmResetDriver:"إعادة تعيين عدد توصيلات هذا السائق إلى 0؟ استخدم هذا بعد دفع مستحقاته.",
-    confirmResetAll:"إعادة تعيين عدد التوصيلات لجميع السائقين إلى 0؟ استخدم هذا بعد دفع الجميع في نهاية الشهر. لا يمكن التراجع عن هذا.",
+    confirmResetDriver:"إعادة تعيين عدد توصيلات هذا السائق إلى 0 ومسح سجل توصيلاته؟ استخدم هذا بعد دفع مستحقاته. لا يمكن التراجع عن هذا.",
+    confirmResetAll:"إعادة تعيين عدد التوصيلات لجميع السائقين إلى 0 ومسح سجل التوصيلات بالكامل؟ استخدم هذا بعد دفع الجميع في نهاية الشهر. لا يمكن التراجع عن هذا.",
     statWeekTotal:"هذا الأسبوع — إجمالي اللترات", statAvgPerVehicle:"هذا الأسبوع — متوسط لكل سيارة", statWeekCost:"هذا الأسبوع — إجمالي التكلفة"
   }
 };
@@ -788,7 +788,10 @@ function renderDrivers(){
       const id = parseInt(btn.dataset.resetDriver, 10);
       if(!confirm(t('confirmResetDriver'))) return;
       const driver = drivers.find(d=>d.id===id);
-      if(driver) driver.delivered = 0;
+      if(driver){
+        driver.delivered = 0;
+        deliveries = deliveries.filter(del=>del.driver !== driver.name);
+      }
       renderAll();
     });
   });
@@ -797,6 +800,7 @@ function renderDrivers(){
 document.getElementById('reset-all-drivers').addEventListener('click', ()=>{
   if(!confirm(t('confirmResetAll'))) return;
   drivers.forEach(d=>{ d.delivered = 0; });
+  deliveries = [];
   renderAll();
 });
 
@@ -1066,6 +1070,15 @@ function loadData(){
     if(data.deliveries) deliveries = data.deliveries;
     if(data.fuelLogs) fuelLogs = data.fuelLogs;
   }catch(e){}
+
+  // backfill ids for entries saved before ids existed, so edit/delete keeps working
+  let maxDelId = 0;
+  deliveries.forEach(d=>{ if(typeof d.id === 'number') maxDelId = Math.max(maxDelId, d.id); });
+  deliveries.forEach(d=>{ if(typeof d.id !== 'number'){ maxDelId++; d.id = maxDelId; } });
+
+  let maxFuelId = 0;
+  fuelLogs.forEach(f=>{ if(typeof f.id === 'number') maxFuelId = Math.max(maxFuelId, f.id); });
+  fuelLogs.forEach(f=>{ if(typeof f.id !== 'number'){ maxFuelId++; f.id = maxFuelId; } });
 }
 
 loadData();
