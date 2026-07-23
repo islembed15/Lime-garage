@@ -1,6 +1,6 @@
 {
-  "name": "Volt Garage — Fleet & Battery Ops",
-  "short_name": "Volt Garage",
+  "name": "Khalluf Garage — Fleet & Battery Ops",
+  "short_name": "Khalluf Garage",
   "description": "Fleet, maintenance, and battery delivery tracker",
   "start_url": "./index.html",
   "scope": "./",
