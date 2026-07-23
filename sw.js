@@ -1,4 +1,4 @@
-const CACHE_NAME = "khalluf garage";
+const CACHE_NAME = "volt-garage-v3";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
