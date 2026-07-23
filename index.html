@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volt Garage — Fleet & Battery Ops</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14161A">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Volt Garage">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Kufi+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161A;
+    --surface:#1D2026;
+    --surface-2:#242832;
+    --line:#2E333D;
+    --lime:#A8E10C;
+    --lime-dim:#7BA80C;
+    --amber:#F5A623;
+    --red:#E0483C;
+    --blue:#5B8CFF;
+    --text:#ECEEF0;
+    --muted:#8A909B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  html[lang="ar"] body{
+    font-family:'Noto Kufi Arabic','Inter',sans-serif;
+  }
+  h1,h2,h3,.display{
+    font-family:'Rajdhani',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    font-weight:700;
+    margin:0;
+  }
+  html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] .display{
+    font-family:'Noto Kufi Arabic',sans-serif;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  html[lang="ar"] nav button{
+    font-family:'Noto Kufi Arabic',sans-serif;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 32px;
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:rgba(20,22,26,0.92);
+    backdrop-filter:blur(6px);
+    z-index:10;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .bolt{
+    width:34px;height:34px;
+    background:var(--lime);
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    color:#0F1104;font-weight:700;font-family:'Rajdhani',sans-serif;font-size:18px;
+    flex-shrink:0;
+  }
+  .brand h1{font-size:20px;color:var(--text);}
+  .brand span{color:var(--muted);font-size:11px;letter-spacing:0.08em;font-family:'Inter',sans-serif;text-transform:uppercase;}
+  html[lang="ar"] .brand span{letter-spacing:0;}
+
+  .header-right{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+
+  nav{display:flex;gap:4px;}
+  nav button{
+    background:none;border:none;color:var(--muted);
+    font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.04em;font-size:14px;
+    padding:8px 16px;border-radius:6px;cursor:pointer;
+    transition:all .15s;
+  }
+  nav button:hover{color:var(--text);background:var(--surface-2);}
+  nav button.active{color:#0F1104;background:var(--lime);}
+
+  .lang-switch{display:flex;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px;}
+  .lang-switch button{
+    background:none;border:none;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;
+    padding:6px 11px;border-radius:5px;cursor:pointer;transition:all .15s;
+  }
+  .lang-switch button:hover{color:var(--text);}
+  .lang-switch button.active{background:var(--lime);color:#0F1104;}
+
+  main{padding:32px;max-width:1280px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .stat-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;
+  }
+  .stat-card .label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+  html[lang="ar"] .stat-card .label{text-transform:none;letter-spacing:0;}
+  .stat-card .value{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;}
+  .stat-card .value.lime{color:var(--lime);}
+  .stat-card .value.amber{color:var(--amber);}
+  .stat-card .value.red{color:var(--red);}
+
+  .section-title{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:32px 0 14px;
+  }
+  .section-title h2{font-size:22px;}
+  .section-title .count{color:var(--muted);font-size:13px;font-family:'IBM Plex Mono',monospace;}
+
+  .alert-list{display:flex;flex-direction:column;gap:8px;}
+  .alert-row{
+    display:flex;align-items:center;gap:12px;
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--amber);
+    border-radius:6px;padding:12px 16px;font-size:14px;
+  }
+  html[dir="rtl"] .alert-row{border-left:none;border-right:3px solid var(--amber);}
+  .alert-row.overdue{border-left-color:var(--red);}
+  html[dir="rtl"] .alert-row.overdue{border-right-color:var(--red);}
+  .alert-row .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    padding:2px 8px;border-radius:4px;background:var(--surface-2);color:var(--amber);
+  }
+  .alert-row.overdue .tag{color:var(--red);}
+
+  .car-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .car-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;
+  }
+  .car-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .car-card h3{font-size:18px;}
+  .car-card .plate{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .status-pill{
+    font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;
+    padding:3px 8px;border-radius:20px;letter-spacing:0.05em;white-space:nowrap;
+  }
+  html[lang="ar"] .status-pill{text-transform:none;letter-spacing:0;}
+  .status-ok{background:rgba(168,225,12,0.14);color:var(--lime);}
+  .status-soon{background:rgba(245,166,35,0.14);color:var(--amber);}
+  .status-overdue{background:rgba(224,72,60,0.14);color:var(--red);}
+
+  .gauge-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+  html[lang="ar"] .gauge-label{text-transform:none;letter-spacing:0;}
+  .segments{display:flex;gap:3px;margin-bottom:14px;}
+  .segments .seg{flex:1;height:10px;border-radius:2px;background:var(--surface-2);}
+  .segments .seg.filled{background:var(--lime);}
+  .segments .seg.filled.warn{background:var(--amber);}
+  .segments .seg.filled.crit{background:var(--red);}
+
+  .car-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;color:var(--muted);}
+  .car-meta b{color:var(--text);font-weight:600;display:block;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  thead th{
+    text-align:left;font-family:'Rajdhani',sans-serif;text-transform:uppercase;font-size:12px;
+    letter-spacing:0.06em;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);
+  }
+  html[dir="rtl"] thead th{text-align:right;}
+  html[lang="ar"] thead th{font-family:'Noto Kufi Arabic',sans-serif;text-transform:none;letter-spacing:0;}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  .driver-name{font-weight:600;}
+  .bar-cell{display:flex;align-items:center;gap:10px;min-width:180px;}
+  .bar-track{flex:1;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--lime-dim),var(--lime));}
+  html[dir="rtl"] .bar-fill{background:linear-gradient(270deg,var(--lime-dim),var(--lime));}
+  .count-num{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--lime);min-width:26px;text-align:right;}
+  html[dir="rtl"] .count-num{text-align:left;}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:24px;}
+  .panel h3{font-size:16px;margin-bottom:14px;}
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+  html[lang="ar"] .field label{text-transform:none;letter-spacing:0;}
+  .field input,.field select{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:6px;
+    color:var(--text);padding:9px 10px;font-family:'Inter',sans-serif;font-size:13.5px;min-width:150px;
+  }
+  html[lang="ar"] .field input, html[lang="ar"] .field select{font-family:'Noto Kufi Arabic','Inter',sans-serif;}
+  .field input:focus,.field select:focus{outline:2px solid var(--lime);outline-offset:1px;border-color:var(--lime);}
+  .btn{
+    background:var(--lime);color:#0F1104;border:none;border-radius:6px;
+    padding:10px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.04em;font-size:14px;cursor:pointer;transition:filter .15s;
+  }
+  html[lang="ar"] .btn{font-family:'Noto Kufi Arabic',sans-serif;text-transform:none;letter-spacing:0;}
+  .btn:hover{filter:brightness(1.1);}
+  .btn:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
+
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:24px;}
+
+  .name-input{
+    background:transparent;border:1px solid transparent;border-radius:5px;
+    color:var(--text);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+    padding:6px 8px;width:100%;min-width:110px;
+  }
+  html[lang="ar"] .name-input{font-family:'Noto Kufi Arabic','Inter',sans-serif;}
+  .name-input:hover{border-color:var(--line);}
+  .name-input:focus{outline:none;border-color:var(--lime);background:var(--surface-2);}
+
+  .remove-btn{
+    background:none;border:1px solid var(--line);color:var(--muted);
+    border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:all .15s;
+  }
+  .remove-btn:hover{border-color:var(--red);color:var(--red);background:rgba(224,72,60,0.1);}
+  .car-card .top .remove-btn{margin-inline-start:8px;}
+
+  @media(max-width:800px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    header{padding:16px;flex-wrap:wrap;gap:12px;}
+    nav{flex-wrap:wrap;}
+    main{padding:18px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .view.active{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="bolt">⚡</div>
+    <div>
+      <h1 data-i18n="brandTitle">Volt Garage</h1>
+      <span data-i18n="brandSub">Fleet & Battery Ops</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <nav>
+      <button class="nav-btn active" data-view="dashboard" data-i18n="navDashboard">Dashboard</button>
+      <button class="nav-btn" data-view="cars" data-i18n="navCars">Cars</button>
+      <button class="nav-btn" data-view="drivers" data-i18n="navDrivers">Drivers</button>
+      <button class="nav-btn" data-view="deliveries" data-i18n="navDeliveries">Deliveries</button>
+      <button class="nav-btn" data-view="fuel" data-i18n="navFuel">Fuel</button>
+    </nav>
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="de">DE</button>
+      <button class="lang-btn" data-lang="ar">AR</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="view active" id="view-dashboard">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="section-title"><h2 data-i18n="alertsTitle">Maintenance Alerts</h2><span class="count" id="alert-count"></span></div>
+    <div class="alert-list" id="alert-list"></div>
+  </section>
+
+  <section class="view" id="view-cars">
+    <div class="panel">
+      <h3 data-i18n="updateVehicle">Update a Vehicle</h3>
+      <div class="form-row">
+        <div class="field">
+          <label data-i18n="fCar">Car</label>
+          <select id="u-car"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="fAction">What did you do?</label>
+          <select id="u-action">
+            <option value="fuel" data-i18n="actionFuel">Added fuel</option>
+            <option value="service" data-i18n="actionService">Did the service</option>
+          </select>
+        </div>
+        <div class="field" id="u-fuel-field">
+          <label data-i18n="fFuelLevel">New Fuel Level (%)</label>
+          <input type="number" id="u-fuel-level" min="0" max="100" value="100">
+        </div>
+        <div class="field" id="u-mileage-field" style="display:none;">
+          <label data-i18n="fCurrentMileage">Current Mileage (km)</label>
+          <input type="number" id="u-mileage" min="0" step="1">
+        </div>
+        <button class="btn" id="u-submit" data-i18n="saveUpdate">Save Update</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 data-i18n="addCarTitle">Add a Car</h3>
+      <div class="form-row">
+        <div class="field">
+          <label data-i18n="fName">Name</label>
+          <input type="text" id="c-name" placeholder="Unit 09">
+        </div>
+        <div class="field">
+          <label data-i18n="fPlate">Plate</label>
+          <input type="text" id="c-plate" placeholder="B-VG 1009">
+        </div>
+        <div class="field">
+          <label data-i18n="fFuelType">Fuel Type</label>
+          <select id="c-fuel-type">
+            <option value="Diesel">Diesel</option>
+            <option value="Petrol">Petrol</option>
+            <option value="Electric">Electric</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="fCurrentMileage">Current Mileage (km)</label>
+          <input type="number" id="c-mileage" min="0" step="1" value="0">
+        </div>
+        <button class="btn" id="c-submit" data-i18n="addCar">Add Car</button>
+      </div>
+    </div>
+
+    <div class="section-title"><h2 id="carsTitle"></h2><span class="count" data-i18n="carsSub">Fuel & maintenance status</span></div>
+    <div class="car-grid" id="car-grid"></div>
+  </section>
+
+  <section class="view" id="view-drivers">
+    <div class="panel">
+      <h3 data-i18n="addDriverTitle">Add a Driver</h3>
+      <div class="form-row">
+        <div class="field">
+          <label data-i18n="fName">Name</label>
+          <input type="text" id="dr-name" placeholder="Driver 16">
+        </div>
+        <div class="field">
+          <label data-i18n="fPhone">Phone</label>
+          <input type="text" id="dr-phone" placeholder="+49 151 000 016">
+        </div>
+        <div class="field">
+          <label data-i18n="fCar">Assigned Car</label>
+          <select id="dr-car"></select>
+        </div>
+        <button class="btn" id="dr-submit" data-i18n="addDriver">Add Driver</button>
+      </div>
+    </div>
+
+    <div class="section-title"><h2 id="driversTitle"></h2><span class="count" data-i18n="driversSub">Batteries delivered</span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thDriver">Driver</th><th data-i18n="thPhone">Phone</th><th data-i18n="thCar">Assigned Car</th><th style="width:140px;" data-i18n="thMonth">This Month</th><th style="width:200px;" data-i18n="thDelivered">Delivered</th><th style="width:50px;"></th>
+      </tr></thead>
+      <tbody id="driver-table"></tbody>
+    </table>
+  </section>
+
+  <section class="view" id="view-deliveries">
+    <div class="panel">
+      <h3 data-i18n="logDelivery">Log a Delivery</h3>
+      <div class="form-row">
+        <div class="field">
+          <label data-i18n="fDriver">Driver</label>
+          <select id="d-driver"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="fCar">Car</label>
+          <select id="d-car"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="fBatteries">Batteries</label>
+          <input type="number" id="d-qty" min="1" value="1" style="min-width:80px;">
+        </div>
+        <div class="field">
+          <label data-i18n="fDate">Date</label>
+          <input type="date" id="d-date">
+        </div>
+        <button class="btn" id="d-submit" data-i18n="addDelivery">Add Delivery</button>
+      </div>
+    </div>
+
+    <div class="section-title"><h2 data-i18n="deliveryLog">Delivery Log</h2><span class="count" id="delivery-count"></span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thDate">Date</th><th data-i18n="thDriver2">Driver</th><th data-i18n="thCar2">Car</th><th data-i18n="thBatteries">Batteries</th>
+      </tr></thead>
+      <tbody id="delivery-table"></tbody>
+    </table>
+  </section>
+
+  <section class="view" id="view-fuel">
+    <div class="panel">
+      <h3 data-i18n="logFuelTitle">Log Fuel Fill-up</h3>
+      <div class="form-row">
+        <div class="field">
+          <label data-i18n="fCar">Car</label>
+          <select id="f-car"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="fLiters">Liters</label>
+          <input type="number" id="f-liters" min="0" step="0.1" value="10" style="min-width:100px;">
+        </div>
+        <div class="field">
+          <label data-i18n="fCost">Cost (€)</label>
+          <input type="number" id="f-cost" min="0" step="0.01" value="15" style="min-width:100px;">
+        </div>
+        <div class="field">
+          <label data-i18n="fDate">Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <button class="btn" id="f-submit" data-i18n="addFuelLog">Add Entry</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="fuel-stat-grid" style="grid-template-columns:repeat(3,1fr);"></div>
+
+    <div class="section-title"><h2 data-i18n="weeklyFuelTitle">Weekly Fuel Consumption</h2><span class="count" id="weekly-fuel-count"></span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thWeek">Week</th><th data-i18n="thCar2">Car</th><th data-i18n="thLiters">Liters</th><th data-i18n="thCost">Cost</th>
+      </tr></thead>
+      <tbody id="weekly-fuel-table"></tbody>
+    </table>
+
+    <div class="section-title"><h2 data-i18n="fuelLogTitle">Fill-up Log</h2><span class="count" id="fuel-log-count"></span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thDate">Date</th><th data-i18n="thCar2">Car</th><th data-i18n="thLiters">Liters</th><th data-i18n="thCost">Cost</th><th style="width:50px;"></th>
+      </tr></thead>
+      <tbody id="fuel-log-table"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<script>
+const translations = {
+  en: {
+    brandTitle:"Volt Garage", brandSub:"Fleet & Battery Ops",
+    navDashboard:"Dashboard", navCars:"Cars", navDrivers:"Drivers", navDeliveries:"Deliveries",
+    alertsTitle:"Maintenance Alerts",
+    carsSub:"Fuel & maintenance status", driversSub:"Batteries delivered",
+    thDriver:"Driver", thPhone:"Phone", thCar:"Assigned Car", thMonth:"This Month", thDelivered:"Delivered",
+    logDelivery:"Log a Delivery", fDriver:"Driver", fCar:"Car", fBatteries:"Batteries", fDate:"Date",
+    addDelivery:"Add Delivery", deliveryLog:"Delivery Log",
+    thDate:"Date", thDriver2:"Driver", thCar2:"Car", thBatteries:"Batteries",
+    statDelivered:"Total Batteries Delivered", statActive:"Active Vehicles", statDrivers:"Drivers on Roster", statDue:"Vehicles Needing Service",
+    carsTitle:"Fleet — 8 Vehicles", driversTitle:"Drivers — 15 On Roster",
+    statusOk:"OK", statusSoon:"Due Soon", statusOverdue:"Overdue",
+    fuelLevel:"Level", mileage:"Mileage", nextService:"Next Service", lastService:"Last Oil Service", kmUntil:"Km Until Service",
+    flagged:"flagged", entries:"entries", noAlerts:"All vehicles are within service range. No alerts.",
+    noDeliveries:"No deliveries logged yet.",
+    overdueMsg:(name,plate,km)=>`${name} (${plate}) is ${km} km past its scheduled service.`,
+    dueMsg:(name,plate,km)=>`${name} (${plate}) has ${km} km left before its next service.`,
+    updateVehicle:"Update a Vehicle", fAction:"What did you do?", actionFuel:"Added fuel", actionService:"Did the service",
+    fFuelLevel:"New Fuel Level (%)", fCurrentMileage:"Current Mileage (km)", saveUpdate:"Save Update",
+    addCarTitle:"Add a Car", fName:"Name", fPlate:"Plate", fFuelType:"Fuel Type", addCar:"Add Car",
+    addDriverTitle:"Add a Driver", fPhone:"Phone", addDriver:"Add Driver",
+    confirmRemoveCar:"Remove this car? This can't be undone.",
+    confirmRemoveDriver:"Remove this driver? This can't be undone.",
+    unassigned:"Unassigned",
+    navFuel:"Fuel", logFuelTitle:"Log Fuel Fill-up", fLiters:"Liters", fCost:"Cost (€)", addFuelLog:"Add Entry",
+    weeklyFuelTitle:"Weekly Fuel Consumption", thWeek:"Week", thCar2:"Car", thLiters:"Liters", thCost:"Cost",
+    fuelLogTitle:"Fill-up Log", noFuelLogs:"No fuel entries logged yet.",
+    confirmRemoveFuelLog:"Remove this fuel entry? This can't be undone.",
+    statWeekTotal:"This Week — Total Liters", statAvgPerVehicle:"This Week — Avg per Vehicle", statWeekCost:"This Week — Total Cost"
+  },
+  de: {
+    brandTitle:"Volt Garage", brandSub:"Flotte & Batteriebetrieb",
+    navDashboard:"Übersicht", navCars:"Fahrzeuge", navDrivers:"Fahrer", navDeliveries:"Lieferungen",
+    alertsTitle:"Wartungshinweise",
+    carsSub:"Kraftstoff- & Wartungsstatus", driversSub:"Gelieferte Batterien",
+    thDriver:"Fahrer", thPhone:"Telefon", thCar:"Zugewiesenes Fahrzeug", thMonth:"Dieser Monat", thDelivered:"Geliefert",
+    logDelivery:"Lieferung erfassen", fDriver:"Fahrer", fCar:"Fahrzeug", fBatteries:"Batterien", fDate:"Datum",
+    addDelivery:"Lieferung hinzufügen", deliveryLog:"Lieferprotokoll",
+    thDate:"Datum", thDriver2:"Fahrer", thCar2:"Fahrzeug", thBatteries:"Batterien",
+    statDelivered:"Batterien insgesamt geliefert", statActive:"Aktive Fahrzeuge", statDrivers:"Fahrer im Einsatz", statDue:"Fahrzeuge mit Wartungsbedarf",
+    carsTitle:"Flotte — 8 Fahrzeuge", driversTitle:"Fahrer — 15 im Einsatz",
+    statusOk:"OK", statusSoon:"Bald fällig", statusOverdue:"Überfällig",
+    fuelLevel:"Stand", mileage:"Kilometerstand", nextService:"Nächste Wartung", lastService:"Letzter Ölwechsel", kmUntil:"Km bis Wartung",
+    flagged:"markiert", entries:"Einträge", noAlerts:"Alle Fahrzeuge liegen im Wartungsbereich. Keine Hinweise.",
+    noDeliveries:"Noch keine Lieferungen erfasst.",
+    overdueMsg:(name,plate,km)=>`${name} (${plate}) ist ${km} km über dem geplanten Wartungstermin.`,
+    dueMsg:(name,plate,km)=>`${name} (${plate}) hat noch ${km} km bis zur nächsten Wartung.`,
+    updateVehicle:"Fahrzeug aktualisieren", fAction:"Was wurde gemacht?", actionFuel:"Kraftstoff nachgefüllt", actionService:"Wartung durchgeführt",
+    fFuelLevel:"Neuer Kraftstoffstand (%)", fCurrentMileage:"Aktueller Kilometerstand (km)", saveUpdate:"Speichern",
+    addCarTitle:"Fahrzeug hinzufügen", fName:"Name", fPlate:"Kennzeichen", fFuelType:"Kraftstoffart", addCar:"Fahrzeug hinzufügen",
+    addDriverTitle:"Fahrer hinzufügen", fPhone:"Telefon", addDriver:"Fahrer hinzufügen",
+    confirmRemoveCar:"Dieses Fahrzeug entfernen? Kann nicht rückgängig gemacht werden.",
+    confirmRemoveDriver:"Diesen Fahrer entfernen? Kann nicht rückgängig gemacht werden.",
+    unassigned:"Nicht zugewiesen",
+    navFuel:"Kraftstoff", logFuelTitle:"Tankfüllung erfassen", fLiters:"Liter", fCost:"Kosten (€)", addFuelLog:"Eintrag hinzufügen",
+    weeklyFuelTitle:"Wöchentlicher Kraftstoffverbrauch", thWeek:"Woche", thCar2:"Fahrzeug", thLiters:"Liter", thCost:"Kosten",
+    fuelLogTitle:"Tankprotokoll", noFuelLogs:"Noch keine Tankeinträge erfasst.",
+    confirmRemoveFuelLog:"Diesen Tankeintrag entfernen? Kann nicht rückgängig gemacht werden.",
+    statWeekTotal:"Diese Woche — Liter gesamt", statAvgPerVehicle:"Diese Woche — Ø pro Fahrzeug", statWeekCost:"Diese Woche — Kosten gesamt"
+  },
+  ar: {
+    brandTitle:"فولت جراج", brandSub:"إدارة الأسطول والبطاريات",
+    navDashboard:"الرئيسية", navCars:"السيارات", navDrivers:"السائقون", navDeliveries:"التوصيلات",
+    alertsTitle:"تنبيهات الصيانة",
+    carsSub:"حالة الوقود والصيانة", driversSub:"البطاريات الموصّلة",
+    thDriver:"السائق", thPhone:"الهاتف", thCar:"السيارة المخصصة", thMonth:"هذا الشهر", thDelivered:"تم توصيله",
+    logDelivery:"تسجيل توصيلة", fDriver:"السائق", fCar:"السيارة", fBatteries:"عدد البطاريات", fDate:"التاريخ",
+    addDelivery:"إضافة توصيلة", deliveryLog:"سجل التوصيلات",
+    thDate:"التاريخ", thDriver2:"السائق", thCar2:"السيارة", thBatteries:"البطاريات",
+    statDelivered:"إجمالي البطاريات الموصّلة", statActive:"السيارات النشطة", statDrivers:"عدد السائقين", statDue:"سيارات بحاجة لصيانة",
+    carsTitle:"الأسطول — 8 سيارات", driversTitle:"السائقون — 15 سائقًا",
+    statusOk:"جيدة", statusSoon:"صيانة قريبة", statusOverdue:"متأخرة",
+    fuelLevel:"المستوى", mileage:"المسافة المقطوعة", nextService:"الصيانة القادمة", lastService:"آخر تغيير زيت", kmUntil:"كم متبقي للصيانة",
+    flagged:"مُعلَّمة", entries:"سجلات", noAlerts:"كل السيارات ضمن فترة الصيانة الآمنة. لا توجد تنبيهات.",
+    noDeliveries:"لا توجد توصيلات مسجلة بعد.",
+    overdueMsg:(name,plate,km)=>`${name} (${plate}) تجاوزت موعد الصيانة المقرر بـ ${km} كم.`,
+    dueMsg:(name,plate,km)=>`${name} (${plate}) متبقٍ لها ${km} كم قبل الصيانة القادمة.`,
+    updateVehicle:"تحديث بيانات سيارة", fAction:"ماذا فعلت؟", actionFuel:"تمت إضافة الوقود", actionService:"تمت الصيانة",
+    fFuelLevel:"مستوى الوقود الجديد (%)", fCurrentMileage:"المسافة الحالية (كم)", saveUpdate:"حفظ التحديث",
+    addCarTitle:"إضافة سيارة", fName:"الاسم", fPlate:"رقم اللوحة", fFuelType:"نوع الوقود", addCar:"إضافة سيارة",
+    addDriverTitle:"إضافة سائق", fPhone:"الهاتف", addDriver:"إضافة سائق",
+    confirmRemoveCar:"هل تريد حذف هذه السيارة؟ لا يمكن التراجع عن هذا.",
+    confirmRemoveDriver:"هل تريد حذف هذا السائق؟ لا يمكن التراجع عن هذا.",
+    unassigned:"غير معيّن",
+    navFuel:"الوقود", logFuelTitle:"تسجيل تعبئة وقود", fLiters:"لترات", fCost:"التكلفة (€)", addFuelLog:"إضافة سجل",
+    weeklyFuelTitle:"استهلاك الوقود الأسبوعي", thWeek:"الأسبوع", thCar2:"السيارة", thLiters:"اللترات", thCost:"التكلفة",
+    fuelLogTitle:"سجل التعبئة", noFuelLogs:"لا توجد سجلات وقود بعد.",
+    confirmRemoveFuelLog:"هل تريد حذف سجل الوقود هذا؟ لا يمكن التراجع عن هذا.",
+    statWeekTotal:"هذا الأسبوع — إجمالي اللترات", statAvgPerVehicle:"هذا الأسبوع — متوسط لكل سيارة", statWeekCost:"هذا الأسبوع — إجمالي التكلفة"
+  }
+};
+let currentLang = "en";
+function t(key){ return translations[currentLang][key]; }
+
+let cars = [
+  {id:1, name:"Unit 01", plate:"B-VG 1001", fuel:"Diesel", fuelLevel:82, mileage:48210, lastService:"2026-05-02", nextServiceKm:55000},
+  {id:2, name:"Unit 02", plate:"B-VG 1002", fuel:"Petrol", fuelLevel:41, mileage:61200, lastService:"2026-03-14", nextServiceKm:63000},
+  {id:3, name:"Unit 03", plate:"B-VG 1003", fuel:"Diesel", fuelLevel:65, mileage:22540, lastService:"2026-06-20", nextServiceKm:32000},
+  {id:4, name:"Unit 04", plate:"B-VG 1004", fuel:"Electric", fuelLevel:93, mileage:15300, lastService:"2026-04-10", nextServiceKm:25000},
+  {id:5, name:"Unit 05", plate:"B-VG 1005", fuel:"Petrol", fuelLevel:18, mileage:77890, lastService:"2026-01-08", nextServiceKm:78000},
+  {id:6, name:"Unit 06", plate:"B-VG 1006", fuel:"Diesel", fuelLevel:57, mileage:33110, lastService:"2026-05-28", nextServiceKm:43000},
+  {id:7, name:"Unit 07", plate:"B-VG 1007", fuel:"Electric", fuelLevel:74, mileage:9800,  lastService:"2026-06-01", nextServiceKm:20000},
+  {id:8, name:"Unit 08", plate:"B-VG 1008", fuel:"Petrol", fuelLevel:50, mileage:52440, lastService:"2026-02-19", nextServiceKm:53000}
+];
+
+let drivers = [
+  {id:1, name:"Driver 01", phone:"+49 151 000 001", car:"Unit 01", delivered:34},
+  {id:2, name:"Driver 02", phone:"+49 151 000 002", car:"Unit 02", delivered:51},
+  {id:3, name:"Driver 03", phone:"+49 151 000 003", car:"Unit 03", delivered:12},
+  {id:4, name:"Driver 04", phone:"+49 151 000 004", car:"Unit 04", delivered:47},
+  {id:5, name:"Driver 05", phone:"+49 151 000 005", car:"Unit 05", delivered:29},
+  {id:6, name:"Driver 06", phone:"+49 151 000 006", car:"Unit 06", delivered:8},
+  {id:7, name:"Driver 07", phone:"+49 151 000 007", car:"Unit 07", delivered:63},
+  {id:8, name:"Driver 08", phone:"+49 151 000 008", car:"Unit 08", delivered:19},
+  {id:9, name:"Driver 09", phone:"+49 151 000 009", car:"Unit 01", delivered:41},
+  {id:10, name:"Driver 10", phone:"+49 151 000 010", car:"Unit 02", delivered:5},
+  {id:11, name:"Driver 11", phone:"+49 151 000 011", car:"Unit 03", delivered:37},
+  {id:12, name:"Driver 12", phone:"+49 151 000 012", car:"Unit 04", delivered:22},
+  {id:13, name:"Driver 13", phone:"+49 151 000 013", car:"Unit 05", delivered:58},
+  {id:14, name:"Driver 14", phone:"+49 151 000 014", car:"Unit 06", delivered:15},
+  {id:15, name:"Driver 15", phone:"+49 151 000 015", car:"Unit 07", delivered:44}
+];
+
+let deliveries = [
+  {date:"2026-07-15", driver:"Driver 07", car:"Unit 07", qty:6},
+  {date:"2026-07-14", driver:"Driver 02", car:"Unit 02", qty:4},
+  {date:"2026-07-14", driver:"Driver 13", car:"Unit 05", qty:5}
+];
+
+let fuelLogs = [
+  {id:1, date:"2026-07-01", car:"Unit 01", liters:42, cost:65.10},
+  {id:2, date:"2026-07-02", car:"Unit 02", liters:38, cost:59.28},
+  {id:3, date:"2026-07-03", car:"Unit 05", liters:55, cost:85.80},
+  {id:4, date:"2026-07-08", car:"Unit 01", liters:39, cost:60.45},
+  {id:5, date:"2026-07-09", car:"Unit 03", liters:31, cost:48.03},
+  {id:6, date:"2026-07-10", car:"Unit 06", liters:44, cost:68.20},
+  {id:7, date:"2026-07-14", car:"Unit 02", liters:36, cost:56.16},
+  {id:8, date:"2026-07-15", car:"Unit 05", liters:52, cost:81.12},
+  {id:9, date:"2026-07-16", car:"Unit 08", liters:29, cost:44.95}
+];
+
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLang = btn.dataset.lang;
+    applyLanguage();
+  });
+});
+
+function applyLanguage(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.title = t('brandTitle') + " — " + t('brandSub');
+
+  renderDeliveryForm();
+  renderCarUpdateForm();
+  renderFuelForm();
+  renderAll();
+}
+
+function carStatus(car){
+  const kmLeft = car.nextServiceKm - car.mileage;
+  if(kmLeft <= 0) return {label:t('statusOverdue'), cls:"overdue"};
+  if(kmLeft <= 1500) return {label:t('statusSoon'), cls:"soon"};
+  return {label:t('statusOk'), cls:"ok"};
+}
+function segClass(level){
+  if(level <= 20) return "crit";
+  if(level <= 45) return "warn";
+  return "";
+}
+
+function renderDashboard(){
+  const totalDelivered = drivers.reduce((s,d)=>s+d.delivered,0);
+  const dueCars = cars.filter(c=>carStatus(c).cls !== "ok");
+  const overdueCars = cars.filter(c=>carStatus(c).cls === "overdue");
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="label">${t('statDelivered')}</div><div class="value lime">${totalDelivered}</div></div>
+    <div class="stat-card"><div class="label">${t('statActive')}</div><div class="value">${cars.length}</div></div>
+    <div class="stat-card"><div class="label">${t('statDrivers')}</div><div class="value">${drivers.length}</div></div>
+    <div class="stat-card"><div class="label">${t('statDue')}</div><div class="value ${overdueCars.length? 'red':'amber'}">${dueCars.length}</div></div>
+  `;
+
+  const list = document.getElementById('alert-list');
+  if(dueCars.length === 0){
+    list.innerHTML = `<div class="empty">${t('noAlerts')}</div>`;
+  } else {
+    list.innerHTML = dueCars.map(c=>{
+      const st = carStatus(c);
+      const kmLeft = c.nextServiceKm - c.mileage;
+      const msg = st.cls === "overdue"
+        ? t('overdueMsg')(c.name, c.plate, Math.abs(kmLeft))
+        : t('dueMsg')(c.name, c.plate, kmLeft);
+      return `<div class="alert-row ${st.cls==='overdue'?'overdue':''}">
+        <span class="tag">${st.label}</span><span>${msg}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('alert-count').textContent = `${dueCars.length} ${t('flagged')}`;
+}
+
+function renderCars(){
+  document.getElementById('carsTitle').textContent = t('carsTitle');
+  document.getElementById('car-grid').innerHTML = cars.map(c=>{
+    const st = carStatus(c);
+    const filled = Math.round(c.fuelLevel/10);
+    const segClasses = segClass(c.fuelLevel);
+    let segs = '';
+    for(let i=0;i<10;i++){
+      segs += `<div class="seg ${i<filled?'filled '+segClasses:''}"></div>`;
+    }
+    return `<div class="car-card">
+      <div class="top">
+        <div><h3>${c.name}</h3><div class="plate">${c.plate}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="status-pill status-${st.cls}">${st.label}</span>
+          <button class="remove-btn" data-remove-car="${c.id}" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="gauge-label"><span>${c.fuel} ${t('fuelLevel')}</span><span>${c.fuelLevel}%</span></div>
+      <div class="segments">${segs}</div>
+      <div class="car-meta">
+        <div>${t('mileage')}<b>${c.mileage.toLocaleString()} km</b></div>
+        <div>${t('nextService')}<b>${c.nextServiceKm.toLocaleString()} km</b></div>
+        <div>${t('lastService')}<b>${c.lastService}</b></div>
+        <div>${t('kmUntil')}<b>${(c.nextServiceKm-c.mileage).toLocaleString()}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('[data-remove-car]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.removeCar, 10);
+      if(!confirm(t('confirmRemoveCar'))) return;
+      const car = cars.find(c=>c.id===id);
+      cars = cars.filter(c=>c.id!==id);
+      if(car){
+        drivers.forEach(d=>{ if(d.car === car.name) d.car = ""; });
+      }
+      renderAll();
+      renderDeliveryForm();
+      renderCarUpdateForm();
+      renderFuelForm();
+    });
+  });
+}
+
+function renderDrivers(){
+  document.getElementById('driversTitle').textContent = t('driversTitle');
+  const maxDelivered = Math.max(...drivers.map(d=>d.delivered), 1);
+  const currentMonth = new Date().toISOString().slice(0,7);
+  const monthlyByDriver = {};
+  deliveries.forEach(del=>{
+    if(del.date.slice(0,7) === currentMonth){
+      monthlyByDriver[del.driver] = (monthlyByDriver[del.driver] || 0) + del.qty;
+    }
+  });
+  document.getElementById('driver-table').innerHTML = drivers.map(d=>{
+    const pct = Math.round((d.delivered/maxDelivered)*100);
+    const monthTotal = monthlyByDriver[d.name] || 0;
+    return `<tr>
+      <td><input class="name-input" data-driver-id="${d.id}" value="${d.name.replace(/"/g,'&quot;')}"></td>
+      <td class="mono" style="color:var(--muted);">${d.phone}</td>
+      <td>${d.car || t('unassigned')}</td>
+      <td class="mono">${monthTotal}</td>
+      <td>
+        <div class="bar-cell">
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
+          <span class="count-num">${d.delivered}</span>
+        </div>
+      </td>
+      <td><button class="remove-btn" data-remove-driver="${d.id}" title="Remove">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('[data-driver-id]').forEach(input=>{
+    input.addEventListener('change', ()=>{
+      const id = parseInt(input.dataset.driverId, 10);
+      const driver = drivers.find(d=>d.id===id);
+      if(driver && input.value.trim()){
+        const oldName = driver.name;
+        driver.name = input.value.trim();
+        // keep delivery log referencing the same driver by name
+        deliveries.forEach(del=>{ if(del.driver === oldName) del.driver = driver.name; });
+        renderAll();
+        renderDeliveryForm();
+      }
+    });
+  });
+  document.querySelectorAll('[data-remove-driver]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.removeDriver, 10);
+      if(!confirm(t('confirmRemoveDriver'))) return;
+      drivers = drivers.filter(d=>d.id!==id);
+      renderAll();
+      renderDeliveryForm();
+    });
+  });
+}
+
+function renderDeliveryForm(){
+  document.getElementById('d-driver').innerHTML = drivers.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
+  document.getElementById('d-car').innerHTML = cars.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('dr-car').innerHTML = `<option value="">${t('unassigned')}</option>` + cars.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  if(!document.getElementById('d-date').value){
+    document.getElementById('d-date').value = new Date().toISOString().slice(0,10);
+  }
+}
+
+/* ---------- ADD CAR ---------- */
+document.getElementById('c-submit').addEventListener('click', ()=>{
+  const name = document.getElementById('c-name').value.trim();
+  const plate = document.getElementById('c-plate').value.trim();
+  const fuelType = document.getElementById('c-fuel-type').value;
+  const mileage = parseInt(document.getElementById('c-mileage').value, 10) || 0;
+  if(!name) return;
+
+  const newId = cars.length ? Math.max(...cars.map(c=>c.id)) + 1 : 1;
+  cars.push({
+    id:newId, name, plate: plate || "—", fuel:fuelType, fuelLevel:100,
+    mileage, lastService: new Date().toISOString().slice(0,10), nextServiceKm: mileage + 10000
+  });
+
+  document.getElementById('c-name').value = "";
+  document.getElementById('c-plate').value = "";
+  document.getElementById('c-mileage').value = "0";
+
+  renderAll();
+  renderDeliveryForm();
+  renderCarUpdateForm();
+  renderFuelForm();
+});
+
+/* ---------- ADD DRIVER ---------- */
+document.getElementById('dr-submit').addEventListener('click', ()=>{
+  const name = document.getElementById('dr-name').value.trim();
+  const phone = document.getElementById('dr-phone').value.trim();
+  const car = document.getElementById('dr-car').value;
+  if(!name) return;
+
+  const newId = drivers.length ? Math.max(...drivers.map(d=>d.id)) + 1 : 1;
+  drivers.push({ id:newId, name, phone: phone || "—", car, delivered:0 });
+
+  document.getElementById('dr-name').value = "";
+  document.getElementById('dr-phone').value = "";
+
+  renderAll();
+  renderDeliveryForm();
+});
+
+/* ---------- CAR UPDATE FORM (fuel / service) ---------- */
+function renderCarUpdateForm(){
+  document.getElementById('u-car').innerHTML = cars.map(c=>`<option value="${c.id}">${c.name} — ${c.plate}</option>`).join('');
+  toggleUpdateFields();
+}
+function toggleUpdateFields(){
+  const action = document.getElementById('u-action').value;
+  document.getElementById('u-fuel-field').style.display = action === 'fuel' ? '' : 'none';
+  document.getElementById('u-mileage-field').style.display = action === 'service' ? '' : 'none';
+  if(action === 'service'){
+    const carId = parseInt(document.getElementById('u-car').value, 10);
+    const car = cars.find(c=>c.id===carId);
+    if(car) document.getElementById('u-mileage').value = car.mileage;
+  }
+}
+document.getElementById('u-action').addEventListener('change', toggleUpdateFields);
+document.getElementById('u-car').addEventListener('change', toggleUpdateFields);
+
+document.getElementById('u-submit').addEventListener('click', ()=>{
+  const carId = parseInt(document.getElementById('u-car').value, 10);
+  const car = cars.find(c=>c.id===carId);
+  if(!car) return;
+  const action = document.getElementById('u-action').value;
+
+  if(action === 'fuel'){
+    let level = parseInt(document.getElementById('u-fuel-level').value, 10);
+    if(isNaN(level)) return;
+    level = Math.max(0, Math.min(100, level));
+    car.fuelLevel = level;
+  } else if(action === 'service'){
+    const mileage = parseInt(document.getElementById('u-mileage').value, 10);
+    if(!isNaN(mileage)) car.mileage = mileage;
+    car.lastService = new Date().toISOString().slice(0,10);
+    car.nextServiceKm = car.mileage + 10000; // standard service interval
+  }
+  renderAll();
+});
+function renderDeliveries(){
+  const sorted = [...deliveries].sort((a,b)=> b.date.localeCompare(a.date));
+  document.getElementById('delivery-table').innerHTML = sorted.map(d=>`
+    <tr><td class="mono">${d.date}</td><td>${d.driver}</td><td>${d.car}</td><td class="mono">${d.qty}</td></tr>
+  `).join('') || `<tr><td colspan="4" class="empty">${t('noDeliveries')}</td></tr>`;
+  document.getElementById('delivery-count').textContent = `${deliveries.length} ${t('entries')}`;
+}
+
+document.getElementById('d-submit').addEventListener('click', ()=>{
+  const driverName = document.getElementById('d-driver').value;
+  const carName = document.getElementById('d-car').value;
+  const qty = parseInt(document.getElementById('d-qty').value, 10) || 0;
+  const date = document.getElementById('d-date').value || new Date().toISOString().slice(0,10);
+  if(qty <= 0) return;
+
+  deliveries.push({date, driver:driverName, car:carName, qty});
+  const driver = drivers.find(d=>d.name===driverName);
+  if(driver) driver.delivered += qty;
+
+  document.getElementById('d-qty').value = 1;
+  renderAll();
+});
+
+/* ---------- FUEL: weekly consumption tracking ---------- */
+function getWeekStart(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // shift back to Monday
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+
+function renderFuelForm(){
+  const fuelCars = cars.filter(c=>c.fuel !== 'Electric');
+  document.getElementById('f-car').innerHTML = fuelCars.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  if(!document.getElementById('f-date').value){
+    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  }
+}
+
+document.getElementById('f-submit').addEventListener('click', ()=>{
+  const car = document.getElementById('f-car').value;
+  const liters = parseFloat(document.getElementById('f-liters').value);
+  const cost = parseFloat(document.getElementById('f-cost').value);
+  const date = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
+  if(!car || isNaN(liters) || liters <= 0) return;
+
+  const newId = fuelLogs.length ? Math.max(...fuelLogs.map(f=>f.id)) + 1 : 1;
+  fuelLogs.push({id:newId, date, car, liters, cost: isNaN(cost) ? 0 : cost});
+
+  document.getElementById('f-liters').value = 10;
+  document.getElementById('f-cost').value = 15;
+  renderAll();
+});
+
+function renderFuelLog(){
+  const sorted = [...fuelLogs].sort((a,b)=> b.date.localeCompare(a.date));
+  document.getElementById('fuel-log-table').innerHTML = sorted.map(f=>`
+    <tr><td class="mono">${f.date}</td><td>${f.car}</td><td class="mono">${f.liters.toFixed(1)} L</td><td class="mono">€${f.cost.toFixed(2)}</td>
+    <td><button class="remove-btn" data-remove-fuel="${f.id}" title="Remove">✕</button></td></tr>
+  `).join('') || `<tr><td colspan="5" class="empty">${t('noFuelLogs')}</td></tr>`;
+  document.getElementById('fuel-log-count').textContent = `${fuelLogs.length} ${t('entries')}`;
+
+  document.querySelectorAll('[data-remove-fuel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.removeFuel, 10);
+      if(!confirm(t('confirmRemoveFuelLog'))) return;
+      fuelLogs = fuelLogs.filter(f=>f.id!==id);
+      renderAll();
+    });
+  });
+}
+
+function renderWeeklyFuel(){
+  const map = {};
+  fuelLogs.forEach(f=>{
+    const wk = getWeekStart(f.date);
+    const key = wk + '|' + f.car;
+    if(!map[key]) map[key] = {week:wk, car:f.car, liters:0, cost:0};
+    map[key].liters += f.liters;
+    map[key].cost += f.cost;
+  });
+  const rows = Object.values(map).sort((a,b)=> b.week.localeCompare(a.week) || a.car.localeCompare(b.car));
+
+  document.getElementById('weekly-fuel-table').innerHTML = rows.map(r=>{
+    const endDate = new Date(r.week + 'T00:00:00');
+    endDate.setDate(endDate.getDate() + 6);
+    const end = endDate.toISOString().slice(0,10);
+    return `<tr><td class="mono">${r.week} → ${end}</td><td>${r.car}</td><td class="mono">${r.liters.toFixed(1)} L</td><td class="mono">€${r.cost.toFixed(2)}</td></tr>`;
+  }).join('') || `<tr><td colspan="4" class="empty">${t('noFuelLogs')}</td></tr>`;
+  document.getElementById('weekly-fuel-count').textContent = `${rows.length} ${t('entries')}`;
+
+  const todayWk = getWeekStart(new Date().toISOString().slice(0,10));
+  const thisWeekRows = rows.filter(r=>r.week === todayWk);
+  const totalThisWeek = thisWeekRows.reduce((s,r)=>s+r.liters, 0);
+  const costThisWeek = thisWeekRows.reduce((s,r)=>s+r.cost, 0);
+  const vehiclesThisWeek = new Set(thisWeekRows.map(r=>r.car)).size;
+  const avg = vehiclesThisWeek ? totalThisWeek / vehiclesThisWeek : 0;
+
+  document.getElementById('fuel-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="label">${t('statWeekTotal')}</div><div class="value lime">${totalThisWeek.toFixed(1)} L</div></div>
+    <div class="stat-card"><div class="label">${t('statWeekCost')}</div><div class="value amber">€${costThisWeek.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="label">${t('statAvgPerVehicle')}</div><div class="value">${avg.toFixed(1)} L</div></div>
+  `;
+}
+
+function renderAll(){
+  renderDashboard();
+  renderCars();
+  renderDrivers();
+  renderDeliveries();
+  renderWeeklyFuel();
+  renderFuelLog();
+}
+renderDeliveryForm();
+renderCarUpdateForm();
+renderFuelForm();
+renderAll();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+</script>
+
+</body>
+</html>
