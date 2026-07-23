@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>khalluf garage — Fleet & Battery Ops</title>
+<title>Khalluf Garage — Fleet & Battery Ops</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#14161A">
 <link rel="icon" href="icon-192.png">
@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Volt Garage">
+<meta name="apple-mobile-web-app-title" content="Khalluf Garage">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Kufi+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
@@ -224,6 +224,16 @@
   .name-input:hover{border-color:var(--line);}
   .name-input:focus{outline:none;border-color:var(--lime);background:var(--surface-2);}
 
+  .edit-input{
+    background:transparent;border:1px solid transparent;border-radius:5px;
+    color:var(--text);font-family:'Inter',sans-serif;font-size:14px;
+    padding:6px 8px;
+  }
+  select.edit-input{cursor:pointer;}
+  .edit-input:hover{border-color:var(--line);}
+  .edit-input:focus{outline:none;border-color:var(--lime);background:var(--surface-2);}
+  .edit-input option{background:var(--surface);color:var(--text);}
+
   .remove-btn{
     background:none;border:1px solid var(--line);color:var(--muted);
     border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;line-height:1;
@@ -249,7 +259,7 @@
   <div class="brand">
     <div class="bolt">⚡</div>
     <div>
-      <h1 data-i18n="brandTitle">Volt Garage</h1>
+      <h1 data-i18n="brandTitle">Khalluf Garage</h1>
       <span data-i18n="brandSub">Fleet & Battery Ops</span>
     </div>
   </div>
@@ -355,7 +365,7 @@
       </div>
     </div>
 
-    <div class="section-title"><h2 id="driversTitle"></h2><span class="count" data-i18n="driversSub">Batteries delivered</span></div>
+    <div class="section-title"><h2 id="driversTitle"></h2><span class="count" data-i18n="driversSub">Batteries delivered</span><button class="btn" id="reset-all-drivers" style="margin-left:auto;" data-i18n="resetAll">Reset All (Paid)</button></div>
     <table>
       <thead><tr>
         <th data-i18n="thDriver">Driver</th><th data-i18n="thPhone">Phone</th><th data-i18n="thCar">Assigned Car</th><th style="width:140px;" data-i18n="thMonth">This Month</th><th style="width:200px;" data-i18n="thDelivered">Delivered</th><th style="width:50px;"></th>
@@ -391,7 +401,7 @@
     <div class="section-title"><h2 data-i18n="deliveryLog">Delivery Log</h2><span class="count" id="delivery-count"></span></div>
     <table>
       <thead><tr>
-        <th data-i18n="thDate">Date</th><th data-i18n="thDriver2">Driver</th><th data-i18n="thCar2">Car</th><th data-i18n="thBatteries">Batteries</th>
+        <th data-i18n="thDate">Date</th><th data-i18n="thDriver2">Driver</th><th data-i18n="thCar2">Car</th><th data-i18n="thBatteries">Batteries</th><th style="width:50px;"></th>
       </tr></thead>
       <tbody id="delivery-table"></tbody>
     </table>
@@ -445,7 +455,7 @@
 <script>
 const translations = {
   en: {
-    brandTitle:"Volt Garage", brandSub:"Fleet & Battery Ops",
+    brandTitle:"Khalluf Garage", brandSub:"Fleet & Battery Ops",
     navDashboard:"Dashboard", navCars:"Cars", navDrivers:"Drivers", navDeliveries:"Deliveries",
     alertsTitle:"Maintenance Alerts",
     carsSub:"Fuel & maintenance status", driversSub:"Batteries delivered",
@@ -472,10 +482,14 @@ const translations = {
     weeklyFuelTitle:"Weekly Fuel Consumption", thWeek:"Week", thCar2:"Car", thLiters:"Liters", thCost:"Cost",
     fuelLogTitle:"Fill-up Log", noFuelLogs:"No fuel entries logged yet.",
     confirmRemoveFuelLog:"Remove this fuel entry? This can't be undone.",
+    confirmRemoveDelivery:"Remove this delivery entry? This can't be undone.",
+    resetAll:"Reset All (Paid)",
+    confirmResetDriver:"Reset this driver's delivered count to 0? Use this after paying them.",
+    confirmResetAll:"Reset ALL drivers' delivered counts to 0? Use this after paying everyone for the month. This can't be undone.",
     statWeekTotal:"This Week — Total Liters", statAvgPerVehicle:"This Week — Avg per Vehicle", statWeekCost:"This Week — Total Cost"
   },
   de: {
-    brandTitle:"Volt Garage", brandSub:"Flotte & Batteriebetrieb",
+    brandTitle:"Khalluf Garage", brandSub:"Flotte & Batteriebetrieb",
     navDashboard:"Übersicht", navCars:"Fahrzeuge", navDrivers:"Fahrer", navDeliveries:"Lieferungen",
     alertsTitle:"Wartungshinweise",
     carsSub:"Kraftstoff- & Wartungsstatus", driversSub:"Gelieferte Batterien",
@@ -502,10 +516,14 @@ const translations = {
     weeklyFuelTitle:"Wöchentlicher Kraftstoffverbrauch", thWeek:"Woche", thCar2:"Fahrzeug", thLiters:"Liter", thCost:"Kosten",
     fuelLogTitle:"Tankprotokoll", noFuelLogs:"Noch keine Tankeinträge erfasst.",
     confirmRemoveFuelLog:"Diesen Tankeintrag entfernen? Kann nicht rückgängig gemacht werden.",
+    confirmRemoveDelivery:"Diesen Liefereintrag entfernen? Kann nicht rückgängig gemacht werden.",
+    resetAll:"Alle zurücksetzen (bezahlt)",
+    confirmResetDriver:"Gelieferte Menge dieses Fahrers auf 0 zurücksetzen? Nach der Bezahlung verwenden.",
+    confirmResetAll:"Gelieferte Menge ALLER Fahrer auf 0 zurücksetzen? Nach Bezahlung aller am Monatsende verwenden. Kann nicht rückgängig gemacht werden.",
     statWeekTotal:"Diese Woche — Liter gesamt", statAvgPerVehicle:"Diese Woche — Ø pro Fahrzeug", statWeekCost:"Diese Woche — Kosten gesamt"
   },
   ar: {
-    brandTitle:"فولت جراج", brandSub:"إدارة الأسطول والبطاريات",
+    brandTitle:"خلوف جراج", brandSub:"إدارة الأسطول والبطاريات",
     navDashboard:"الرئيسية", navCars:"السيارات", navDrivers:"السائقون", navDeliveries:"التوصيلات",
     alertsTitle:"تنبيهات الصيانة",
     carsSub:"حالة الوقود والصيانة", driversSub:"البطاريات الموصّلة",
@@ -532,6 +550,10 @@ const translations = {
     weeklyFuelTitle:"استهلاك الوقود الأسبوعي", thWeek:"الأسبوع", thCar2:"السيارة", thLiters:"اللترات", thCost:"التكلفة",
     fuelLogTitle:"سجل التعبئة", noFuelLogs:"لا توجد سجلات وقود بعد.",
     confirmRemoveFuelLog:"هل تريد حذف سجل الوقود هذا؟ لا يمكن التراجع عن هذا.",
+    confirmRemoveDelivery:"هل تريد حذف سجل التوصيل هذا؟ لا يمكن التراجع عن هذا.",
+    resetAll:"إعادة تعيين الكل (تم الدفع)",
+    confirmResetDriver:"إعادة تعيين عدد توصيلات هذا السائق إلى 0؟ استخدم هذا بعد دفع مستحقاته.",
+    confirmResetAll:"إعادة تعيين عدد التوصيلات لجميع السائقين إلى 0؟ استخدم هذا بعد دفع الجميع في نهاية الشهر. لا يمكن التراجع عن هذا.",
     statWeekTotal:"هذا الأسبوع — إجمالي اللترات", statAvgPerVehicle:"هذا الأسبوع — متوسط لكل سيارة", statWeekCost:"هذا الأسبوع — إجمالي التكلفة"
   }
 };
@@ -568,9 +590,9 @@ let drivers = [
 ];
 
 let deliveries = [
-  {date:"2026-07-15", driver:"Driver 07", car:"Unit 07", qty:6},
-  {date:"2026-07-14", driver:"Driver 02", car:"Unit 02", qty:4},
-  {date:"2026-07-14", driver:"Driver 13", car:"Unit 05", qty:5}
+  {id:1, date:"2026-07-15", driver:"Driver 07", car:"Unit 07", qty:6},
+  {id:2, date:"2026-07-14", driver:"Driver 02", car:"Unit 02", qty:4},
+  {id:3, date:"2026-07-14", driver:"Driver 13", car:"Unit 05", qty:5}
 ];
 
 let fuelLogs = [
@@ -731,7 +753,10 @@ function renderDrivers(){
           <span class="count-num">${d.delivered}</span>
         </div>
       </td>
-      <td><button class="remove-btn" data-remove-driver="${d.id}" title="Remove">✕</button></td>
+      <td style="white-space:nowrap;">
+        <button class="remove-btn" data-reset-driver="${d.id}" title="Reset" style="margin-right:4px;">↺</button>
+        <button class="remove-btn" data-remove-driver="${d.id}" title="Remove">✕</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -758,7 +783,22 @@ function renderDrivers(){
       renderDeliveryForm();
     });
   });
+  document.querySelectorAll('[data-reset-driver]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.resetDriver, 10);
+      if(!confirm(t('confirmResetDriver'))) return;
+      const driver = drivers.find(d=>d.id===id);
+      if(driver) driver.delivered = 0;
+      renderAll();
+    });
+  });
 }
+
+document.getElementById('reset-all-drivers').addEventListener('click', ()=>{
+  if(!confirm(t('confirmResetAll'))) return;
+  drivers.forEach(d=>{ d.delivered = 0; });
+  renderAll();
+});
 
 function renderDeliveryForm(){
   document.getElementById('d-driver').innerHTML = drivers.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
@@ -850,9 +890,63 @@ document.getElementById('u-submit').addEventListener('click', ()=>{
 function renderDeliveries(){
   const sorted = [...deliveries].sort((a,b)=> b.date.localeCompare(a.date));
   document.getElementById('delivery-table').innerHTML = sorted.map(d=>`
-    <tr><td class="mono">${d.date}</td><td>${d.driver}</td><td>${d.car}</td><td class="mono">${d.qty}</td></tr>
-  `).join('') || `<tr><td colspan="4" class="empty">${t('noDeliveries')}</td></tr>`;
+    <tr>
+      <td><input type="date" class="mono edit-input" data-del-field="date" data-del-id="${d.id}" value="${d.date}"></td>
+      <td>
+        <select class="edit-input" data-del-field="driver" data-del-id="${d.id}">
+          ${drivers.map(dr=>`<option value="${dr.name}" ${dr.name===d.driver?'selected':''}>${dr.name}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select class="edit-input" data-del-field="car" data-del-id="${d.id}">
+          ${cars.map(c=>`<option value="${c.name}" ${c.name===d.car?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="number" min="1" class="mono edit-input" style="width:70px;" data-del-field="qty" data-del-id="${d.id}" value="${d.qty}"></td>
+      <td><button class="remove-btn" data-remove-delivery="${d.id}" title="Remove">✕</button></td>
+    </tr>
+  `).join('') || `<tr><td colspan="5" class="empty">${t('noDeliveries')}</td></tr>`;
   document.getElementById('delivery-count').textContent = `${deliveries.length} ${t('entries')}`;
+
+  document.querySelectorAll('[data-del-field]').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const id = parseInt(el.dataset.delId, 10);
+      const field = el.dataset.delField;
+      const entry = deliveries.find(x=>x.id===id);
+      if(!entry) return;
+
+      if(field === 'qty'){
+        const newQty = parseInt(el.value, 10) || 0;
+        if(newQty <= 0) return;
+        const driver = drivers.find(dr=>dr.name===entry.driver);
+        if(driver) driver.delivered += (newQty - entry.qty);
+        entry.qty = newQty;
+      } else if(field === 'driver'){
+        const oldDriver = drivers.find(dr=>dr.name===entry.driver);
+        if(oldDriver) oldDriver.delivered -= entry.qty;
+        entry.driver = el.value;
+        const newDriver = drivers.find(dr=>dr.name===entry.driver);
+        if(newDriver) newDriver.delivered += entry.qty;
+      } else {
+        entry[field] = el.value;
+      }
+      renderAll();
+    });
+  });
+
+  document.querySelectorAll('[data-remove-delivery]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.removeDelivery, 10);
+      if(!confirm(t('confirmRemoveDelivery'))) return;
+      const entry = deliveries.find(x=>x.id===id);
+      if(entry){
+        const driver = drivers.find(dr=>dr.name===entry.driver);
+        if(driver) driver.delivered = Math.max(0, driver.delivered - entry.qty);
+      }
+      deliveries = deliveries.filter(x=>x.id!==id);
+      renderAll();
+    });
+  });
 }
 
 document.getElementById('d-submit').addEventListener('click', ()=>{
@@ -862,7 +956,8 @@ document.getElementById('d-submit').addEventListener('click', ()=>{
   const date = document.getElementById('d-date').value || new Date().toISOString().slice(0,10);
   if(qty <= 0) return;
 
-  deliveries.push({date, driver:driverName, car:carName, qty});
+  const newId = deliveries.length ? Math.max(...deliveries.map(x=>x.id)) + 1 : 1;
+  deliveries.push({id:newId, date, driver:driverName, car:carName, qty});
   const driver = drivers.find(d=>d.name===driverName);
   if(driver) driver.delivered += qty;
 
