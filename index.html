@@ -953,7 +953,30 @@ function renderWeeklyFuel(){
   `;
 }
 
+const STORAGE_KEY = "voltGarageData";
+
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({cars, drivers, deliveries, fuelLogs}));
+  }catch(e){}
+}
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(data.cars) cars = data.cars;
+    if(data.drivers) drivers = data.drivers;
+    if(data.deliveries) deliveries = data.deliveries;
+    if(data.fuelLogs) fuelLogs = data.fuelLogs;
+  }catch(e){}
+}
+
+loadData();
+
 function renderAll(){
+  saveData();
   renderDashboard();
   renderCars();
   renderDrivers();
