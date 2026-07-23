@@ -1,4 +1,4 @@
-const CACHE_NAME = "volt-garage-v1";
+const CACHE_NAME = "volt-garage-v2";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
