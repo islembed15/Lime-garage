@@ -432,6 +432,23 @@
     </div>
 
     <div class="stat-grid" id="fuel-stat-grid" style="grid-template-columns:repeat(3,1fr);"></div>
+    <div class="stat-grid" id="fuel-month-stat-grid" style="grid-template-columns:repeat(2,1fr);margin-top:12px;"></div>
+
+    <div class="section-title"><h2 data-i18n="monthlyFuelTitle">Monthly Fuel Consumption</h2><span class="count" id="monthly-fuel-count"></span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thMonth2">Month</th><th data-i18n="thCar2">Car</th><th data-i18n="thLiters">Liters</th><th data-i18n="thCost">Cost</th>
+      </tr></thead>
+      <tbody id="monthly-fuel-table"></tbody>
+    </table>
+
+    <div class="section-title"><h2 data-i18n="weeklySummaryTitle">Past Weeks Summary</h2><span class="count" id="weekly-summary-count"></span></div>
+    <table>
+      <thead><tr>
+        <th data-i18n="thWeek">Week</th><th data-i18n="thLiters">Liters</th><th data-i18n="thCost">Cost</th>
+      </tr></thead>
+      <tbody id="weekly-summary-table"></tbody>
+    </table>
 
     <div class="section-title"><h2 data-i18n="weeklyFuelTitle">Weekly Fuel Consumption</h2><span class="count" id="weekly-fuel-count"></span></div>
     <table>
@@ -480,6 +497,9 @@ const translations = {
     unassigned:"Unassigned",
     navFuel:"Fuel", logFuelTitle:"Log Fuel Fill-up", fLiters:"Liters", fCost:"Cost (€)", addFuelLog:"Add Entry",
     weeklyFuelTitle:"Weekly Fuel Consumption", thWeek:"Week", thCar2:"Car", thLiters:"Liters", thCost:"Cost",
+    monthlyFuelTitle:"Monthly Fuel Consumption", thMonth2:"Month",
+    weeklySummaryTitle:"Past Weeks Summary",
+    statMonthTotal:"This Month — Total Liters", statMonthCost:"This Month — Total Cost",
     fuelLogTitle:"Fill-up Log", noFuelLogs:"No fuel entries logged yet.",
     confirmRemoveFuelLog:"Remove this fuel entry? This can't be undone.",
     confirmRemoveDelivery:"Remove this delivery entry? This can't be undone.",
@@ -514,6 +534,9 @@ const translations = {
     unassigned:"Nicht zugewiesen",
     navFuel:"Kraftstoff", logFuelTitle:"Tankfüllung erfassen", fLiters:"Liter", fCost:"Kosten (€)", addFuelLog:"Eintrag hinzufügen",
     weeklyFuelTitle:"Wöchentlicher Kraftstoffverbrauch", thWeek:"Woche", thCar2:"Fahrzeug", thLiters:"Liter", thCost:"Kosten",
+    monthlyFuelTitle:"Monatlicher Kraftstoffverbrauch", thMonth2:"Monat",
+    weeklySummaryTitle:"Übersicht vergangene Wochen",
+    statMonthTotal:"Dieser Monat — Liter gesamt", statMonthCost:"Dieser Monat — Kosten gesamt",
     fuelLogTitle:"Tankprotokoll", noFuelLogs:"Noch keine Tankeinträge erfasst.",
     confirmRemoveFuelLog:"Diesen Tankeintrag entfernen? Kann nicht rückgängig gemacht werden.",
     confirmRemoveDelivery:"Diesen Liefereintrag entfernen? Kann nicht rückgängig gemacht werden.",
@@ -548,6 +571,9 @@ const translations = {
     unassigned:"غير معيّن",
     navFuel:"الوقود", logFuelTitle:"تسجيل تعبئة وقود", fLiters:"لترات", fCost:"التكلفة (€)", addFuelLog:"إضافة سجل",
     weeklyFuelTitle:"استهلاك الوقود الأسبوعي", thWeek:"الأسبوع", thCar2:"السيارة", thLiters:"اللترات", thCost:"التكلفة",
+    monthlyFuelTitle:"استهلاك الوقود الشهري", thMonth2:"الشهر",
+    weeklySummaryTitle:"ملخص الأسابيع الماضية",
+    statMonthTotal:"هذا الشهر — إجمالي اللترات", statMonthCost:"هذا الشهر — إجمالي التكلفة",
     fuelLogTitle:"سجل التعبئة", noFuelLogs:"لا توجد سجلات وقود بعد.",
     confirmRemoveFuelLog:"هل تريد حذف سجل الوقود هذا؟ لا يمكن التراجع عن هذا.",
     confirmRemoveDelivery:"هل تريد حذف سجل التوصيل هذا؟ لا يمكن التراجع عن هذا.",
@@ -978,6 +1004,10 @@ function getWeekStart(dateStr){
   return d.toISOString().slice(0,10);
 }
 
+function getMonthKey(dateStr){
+  return dateStr.slice(0,7); // "YYYY-MM"
+}
+
 function renderFuelForm(){
   const fuelCars = cars.filter(c=>c.fuel !== 'Electric');
   document.getElementById('f-car').innerHTML = fuelCars.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
@@ -1050,6 +1080,50 @@ function renderWeeklyFuel(){
     <div class="stat-card"><div class="label">${t('statWeekCost')}</div><div class="value amber">€${costThisWeek.toFixed(2)}</div></div>
     <div class="stat-card"><div class="label">${t('statAvgPerVehicle')}</div><div class="value">${avg.toFixed(1)} L</div></div>
   `;
+
+  // Past weeks summary (all cars combined per week)
+  const weekMap = {};
+  fuelLogs.forEach(f=>{
+    const wk = getWeekStart(f.date);
+    if(!weekMap[wk]) weekMap[wk] = {week:wk, liters:0, cost:0};
+    weekMap[wk].liters += f.liters;
+    weekMap[wk].cost += f.cost;
+  });
+  const weekRows = Object.values(weekMap).sort((a,b)=> b.week.localeCompare(a.week));
+  document.getElementById('weekly-summary-table').innerHTML = weekRows.map(r=>{
+    const endDate = new Date(r.week + 'T00:00:00');
+    endDate.setDate(endDate.getDate() + 6);
+    const end = endDate.toISOString().slice(0,10);
+    return `<tr><td class="mono">${r.week} → ${end}</td><td class="mono">${r.liters.toFixed(1)} L</td><td class="mono">€${r.cost.toFixed(2)}</td></tr>`;
+  }).join('') || `<tr><td colspan="3" class="empty">${t('noFuelLogs')}</td></tr>`;
+  document.getElementById('weekly-summary-count').textContent = `${weekRows.length} ${t('entries')}`;
+}
+
+function renderMonthlyFuel(){
+  const map = {};
+  fuelLogs.forEach(f=>{
+    const mo = getMonthKey(f.date);
+    const key = mo + '|' + f.car;
+    if(!map[key]) map[key] = {month:mo, car:f.car, liters:0, cost:0};
+    map[key].liters += f.liters;
+    map[key].cost += f.cost;
+  });
+  const rows = Object.values(map).sort((a,b)=> b.month.localeCompare(a.month) || a.car.localeCompare(b.car));
+
+  document.getElementById('monthly-fuel-table').innerHTML = rows.map(r=>
+    `<tr><td class="mono">${r.month}</td><td>${r.car}</td><td class="mono">${r.liters.toFixed(1)} L</td><td class="mono">€${r.cost.toFixed(2)}</td></tr>`
+  ).join('') || `<tr><td colspan="4" class="empty">${t('noFuelLogs')}</td></tr>`;
+  document.getElementById('monthly-fuel-count').textContent = `${rows.length} ${t('entries')}`;
+
+  const thisMonth = getMonthKey(new Date().toISOString().slice(0,10));
+  const thisMonthRows = rows.filter(r=>r.month === thisMonth);
+  const totalThisMonth = thisMonthRows.reduce((s,r)=>s+r.liters, 0);
+  const costThisMonth = thisMonthRows.reduce((s,r)=>s+r.cost, 0);
+
+  document.getElementById('fuel-month-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="label">${t('statMonthTotal')}</div><div class="value lime">${totalThisMonth.toFixed(1)} L</div></div>
+    <div class="stat-card"><div class="label">${t('statMonthCost')}</div><div class="value amber">€${costThisMonth.toFixed(2)}</div></div>
+  `;
 }
 
 const STORAGE_KEY = "voltGarageData";
@@ -1090,6 +1164,7 @@ function renderAll(){
   renderDrivers();
   renderDeliveries();
   renderWeeklyFuel();
+  renderMonthlyFuel();
   renderFuelLog();
 }
 renderDeliveryForm();
